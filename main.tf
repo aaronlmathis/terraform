@@ -8,7 +8,7 @@ resource "aws_instance" "Webserver" {
   availability_zone = "us-east-1a"
   key_name          = "Terraform"
   vpc_security_group_ids = ["sg-00210c164f22a8dc2"]
-  
+
   user_data = <<-EOT
               #!/bin/bash
               # Update the system
@@ -23,26 +23,35 @@ resource "aws_instance" "Webserver" {
               # Create a virtual environment
               python3 -m venv /home/admin/flaskapp/.venv
 
-              # Activate the virtual environment
-              source /home/admin/flaskapp/.venv/bin/activate
-
               # Install Gunicorn in the virtual environment
-              pip install gunicorn
-
-              # Change directory to the app directory
-              cd /home/admin/flaskapp
+              /home/admin/flaskapp/.venv/bin/pip install gunicorn
 
               # Install Python dependencies inside the virtual environment
-              pip install -r requirements.txt
+              /home/admin/flaskapp/.venv/bin/pip install -r /home/admin/flaskapp/requirements.txt
 
-              # Set up Gunicorn to serve the Flask app using the virtual environment
-              /home/admin/flaskapp/.venv/bin/gunicorn --workers 3 --bind unix:/home/admin/flaskapp/flaskapp.sock -m 007 "website:create_app()" --daemon
-              
-              # Wait for Gunicorn to start and create the socket file
-              sleep 10
-              
-              # Set the correct permissions on the Unix socket
-              sudo chmod 666 /home/admin/flaskapp/flaskapp.sock
+              # Create Gunicorn systemd service file
+              sudo tee /etc/systemd/system/flask_app.service > /dev/null <<EOF
+              [Unit]
+              Description=Gunicorn instance to serve Flask app
+              After=network.target
+
+              [Service]
+              User=admin
+              Group=admin
+              WorkingDirectory=/home/admin/flaskapp
+              Environment="PATH=/home/admin/flaskapp/.venv/bin"
+              ExecStart=/home/admin/flaskapp/.venv/bin/gunicorn --workers 3 --bind unix:/home/admin/flaskapp/flaskapp.sock website:create_app
+
+              [Install]
+              WantedBy=multi-user.target
+              EOF
+
+              # Reload systemd to read the new service file
+              sudo systemctl daemon-reload
+
+              # Start and enable Gunicorn service
+              sudo systemctl start flask_app
+              sudo systemctl enable flask_app
 
               # Configure Nginx to reverse proxy to Gunicorn
               sudo tee /etc/nginx/sites-available/flaskapp > /dev/null <<EONGINX
