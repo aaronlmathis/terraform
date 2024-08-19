@@ -6,7 +6,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "Webserver" {
-  ami               = "ami-04a81a99f5ec58529"
+  ami               = "ami-00402f0bdf4996822"
   instance_type     = "t2.micro"
   availability_zone = "us-east-1a"
 
