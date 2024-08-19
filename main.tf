@@ -14,10 +14,16 @@ resource "aws_instance" "Webserver" {
               sudo apt-get update -y
 
               # Install required packages
-              sudo apt-get install -y git python3 python3-pip nginx
+              sudo apt-get install -y git python3 python3-pip python3-venv nginx
 
-              # Install Gunicorn using pip3
-              pip3 install gunicorn
+              # Create a virtual environment
+              python3 -m venv /home/debian/flaskapp/venv
+
+              # Activate the virtual environment
+              source /home/debian/flaskapp/venv/bin/activate
+
+              # Install Gunicorn in the virtual environment
+              pip install gunicorn
 
               # Clone the GitHub repository
               git clone https://github.com/aaronlmathis/flaskapp.git /home/debian/flaskapp
@@ -25,11 +31,11 @@ resource "aws_instance" "Webserver" {
               # Change directory to the app directory
               cd /home/debian/flaskapp
 
-              # Install Python dependencies
-              pip3 install -r requirements.txt
+              # Install Python dependencies inside the virtual environment
+              pip install -r requirements.txt
 
-              # Set up Gunicorn to serve the Flask app
-              gunicorn --workers 3 --bind unix:/home/debian/flaskapp/flaskapp.sock -m 007 app:app --daemon
+              # Set up Gunicorn to serve the Flask app using the virtual environment
+              /home/debian/flaskapp/venv/bin/gunicorn --workers 3 --bind unix:/home/debian/flaskapp/flaskapp.sock -m 007 app:app --daemon
 
               # Configure Nginx to reverse proxy to Gunicorn
               sudo bash -c 'cat > /etc/nginx/sites-available/flaskapp << EOF
