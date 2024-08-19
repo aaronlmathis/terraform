@@ -19,7 +19,10 @@ resource "aws_instance" "Webserver" {
 
               # Clone the GitHub repository
               git clone https://github.com/aaronlmathis/flaskapp.git /home/admin/flaskapp
-
+              
+              # Change ownership of the Flask app directory
+              sudo chown -R admin:admin /home/admin/flaskapp
+              
               # Create a virtual environment
               python3 -m venv /home/admin/flaskapp/.venv
 
