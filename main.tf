@@ -7,7 +7,8 @@ resource "aws_instance" "Webserver" {
   instance_type     = "t2.micro"
   availability_zone = "us-east-1a"
   key_name          = "ansible"  # Remove this line if SSH access is not needed
-
+  vpc_security_group_ids = ["sg-00210c164f22a8dc2"]
+  
   user_data = <<-EOF
               #!/bin/bash
               # Update the system
