@@ -37,7 +37,10 @@ resource "aws_instance" "Webserver" {
 
               # Set up Gunicorn to serve the Flask app using the virtual environment
               /home/admin/flaskapp/.venv/bin/gunicorn --workers 3 --bind unix:/home/admin/flaskapp/flaskapp.sock -m 007 "website:create_app()" --daemon
-
+              
+              # Wait for Gunicorn to start and create the socket file
+              sleep 10
+              
               # Set the correct permissions on the Unix socket
               sudo chmod 666 /home/admin/flaskapp/flaskapp.sock
 
@@ -55,6 +58,7 @@ resource "aws_instance" "Webserver" {
               EONGINX
 
               # Enable the Nginx configuration and restart the service
+              sudo rm /etc/nginx/sites-enabled/default
               sudo ln -s /etc/nginx/sites-available/flaskapp /etc/nginx/sites-enabled
               sudo nginx -t
               sudo systemctl restart nginx
