@@ -6,10 +6,10 @@ resource "aws_instance" "Webserver" {
   ami               = "ami-00402f0bdf4996822"
   instance_type     = "t2.micro"
   availability_zone = "us-east-1a"
-  key_name          = "Terraform"  # Remove this line if SSH access is not needed
+  key_name          = "Terraform"
   vpc_security_group_ids = ["sg-00210c164f22a8dc2"]
   
-  user_data = <<-EOF
+  user_data = <<-EOT
               #!/bin/bash
               # Update the system
               sudo apt-get update -y
@@ -42,7 +42,7 @@ resource "aws_instance" "Webserver" {
               sudo chmod 666 /home/admin/flaskapp/flaskapp.sock
 
               # Configure Nginx to reverse proxy to Gunicorn
-              sudo tee /etc/nginx/sites-available/flaskapp > /dev/null <<EOF
+              sudo tee /etc/nginx/sites-available/flaskapp > /dev/null <<EONGINX
               server {
                   listen 80;
                   server_name _;
@@ -52,14 +52,14 @@ resource "aws_instance" "Webserver" {
                       proxy_pass http://unix:/home/admin/flaskapp/flaskapp.sock;
                   }
               }
-              EOF
+              EONGINX
 
               # Enable the Nginx configuration and restart the service
               sudo ln -s /etc/nginx/sites-available/flaskapp /etc/nginx/sites-enabled
               sudo nginx -t
               sudo systemctl restart nginx
 
-              EOF
+              EOT
 
   tags = {
     Name = "Terraform-Debian-Flask-Server"
